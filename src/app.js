@@ -57,8 +57,8 @@ app.use(express.static("Public"));
 /**
  * Parses and validates cookies from incoming requests.
  * app.use(cookieParser()); signifies that the cookieParser() middleware is being added to the Express application.
-*The cookieParser() middleware is used to parse cookie headers and populate the req.cookies 
-*object with the parsed cookies. This allows you to access the cookies in your request handlers.
+ *The cookieParser() middleware is used to parse cookie headers and populate the req.cookies
+ *object with the parsed cookies. This allows you to access the cookies in your request handlers.
  * @module cookieParser
  */
 
