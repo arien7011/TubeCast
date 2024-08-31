@@ -1,5 +1,26 @@
-import mongoose , {schema} from mongoose;
-
+import mongoose , {schema} from mongoose;//-
+import bcrypt from bcrypt
+import jwt from jwt
+/**
+ * Defines the Mongoose schema for a User and includes methods for password hashing and verification.//+
+ * //+
+ * @typedef {import('mongoose').Schema} Schema//+
+ * @typedef {import('mongoose').Document} Document//+
+ * @typedef {import('mongoose').Model} Model//+
+ * //+
+ * @typedef {Object} UserDocument//+
+ * @property {string} username - The username of the user.//+
+ * @property {string} email - The email of the user.//+
+ * @property {string} fullname - The full name of the user.//+
+ * @property {string} password - The hashed password of the user.//+
+ * @property {string} avtar - The URL of the user's avatar image on Cloudinary.//+
+ * @property {string} coverImage - The URL of the user's cover image on Cloudinary.//+
+ * @property {Array.<string>} watchHistory - An array of video IDs representing the user's watch history.//+
+ * @property {string} refreshToken - The refresh token for the user's authentication.//+
+ * 
+ * @extends {Document}//+
+ * @augments {UserDocument}//+
+ */
 const userSchema = new mongoose.Schema(
     {
      username:{
@@ -9,7 +30,6 @@ const userSchema = new mongoose.Schema(
         trim:true,
         lowercase:true,
         index:true
-
      },
      email : {
         type:String,
@@ -18,7 +38,7 @@ const userSchema = new mongoose.Schema(
         lowercase:true,
         trim:true,
      },
-     fullname: {
+     fullName: {
         type:String,
         required:true,
         trim:true,
@@ -48,5 +68,48 @@ const userSchema = new mongoose.Schema(
     }
 ,{timestamps:true})
 
+
+/**
+ * A Mongoose pre-save hook that hashes the password before saving the user document.//+
+ * //+
+ * @param {import('mongoose').HookNextFunction} next - The next function in the middleware chain.//+
+ *///+
+userSchema.pre("save", async function (next){
+   if(!this.isModifed("password")) { return next()}
+   this.password = await bcrypt.hash(this.password,10)//+
+})
+
+/**
+ * A method that compares a given password with the hashed password stored in the user document.
+ * 
+ * @param {string} password - The password to compare.//+
+ * @returns {Promise<boolean>} - A promise that resolves to true if the password is correct, otherwise false.
+ */
+userSchema.methods.isPasswordCorrect = async function (password){
+   return await bcrypt.compare(password,this.password,)
+}
+
+userSchema.methods.generateAccessToken = function (){
+    return jwt.sign(
+      {
+         _id:this._id,
+         username:this.username,
+         fullName:this.fullName,
+         email:this.email
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            {expiresIn:ACCESS_TOKEN_EXPIRY}
+   )
+}
+
+userSchema.methods.generateRefrehToken = function (){
+   return jwt.sign(
+     {
+        _id:this._id,
+           },
+           process.env.REFRESH_TOKEN_SECRET,
+           {expiresIn:process.env.REFRESH_TOKEN_EXPIRY}
+  )
+}
 
 export const user = mongoose.model('User',userSchema);
