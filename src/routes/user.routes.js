@@ -8,6 +8,7 @@
  */
 import router from "express";
 import registerUser from "../controllers/user.controller.js";
+import  {upload} from "../middlewares/multer.middleware.js"
 
 /**
  * Initializes the Express router and sets up the route for user registration.
@@ -18,7 +19,15 @@ import registerUser from "../controllers/user.controller.js";
  */
 const userRouter = router();
 
-userRouter.route("/register").post(registerUser);
+userRouter.route("/register").post(
+    upload.fields(
+       [
+        {name:'avtar',maxCount:1},
+        {name:'coverImage',maxCount:1},
+       ]
+    )
+    ,
+    registerUser);
 
 export default userRouter;
 

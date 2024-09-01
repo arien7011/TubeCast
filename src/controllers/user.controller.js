@@ -1,12 +1,73 @@
 import asyncHandler from '../utils/asyncHandler.js';
-
-
-
-
+import ApiError from '../utils/ApiError.js';
+import {User} from '../models/user.model.js';
+import {uploadFileOnCloudinary} from '../utils/cloudinary.js';
+import {apiResponse} from '../utils/apiResponse.js';
+/**
+ * Registers a new user.
+ *
+ * This function is an asynchronous handler that processes a POST request to register a new user.
+ * It uses the 'asyncHandler' utility function to handle any potential errors that may occur during the registration process.
+ *
+ * @param {Object} req - The request object containing the user's registration data.
+ * @param {Object} res - The response object to be sent back to the client.
+ * @param {Object} req.body - The user's registration data.
+ * @param {string} req.body.username - The username of the new user.
+ * @param {string} req.body.email - The email of the new user.
+ * @param {string} req.body.password - The password of the new user.
+ * @returns {void} - This function does not return any value.
+ */
 const registerUser = asyncHandler( async (req,res)=>{
-    res.status(200).json({
-        message:"Welcome Arian"
-    })
+    // TODO: Implement the registration logic here.
+ //  get data from request body
+ //get user details from frontend
+ // check if all required information is available in request or not ( i.e check if  required user details are not empty).
+ //check if user is already registered (check for username and email for verification)
+ // check for images and avtar 
+ //upload them on cloudinary, avtar
+ // create user - create entry in db as object (mongo db stores data as object (in key value pair))
+ //  return all data as response object
+ // remove password and refreshtoken 
+ // check if user registered(if user created successfully)
+ //return response
+
+  const userData = req.body;
+  const {username,fullName,email,password} = userData;
+  if(
+    [username,fullName,email,password].some((fields)=>{
+     fields.trim() === ''}))
+     {
+       throw new ApiError(400,'All fields are required');
+     }
+   const isUserExist = users.findOne({
+    $or:[{username},{email}]
+  });
+   if(isUserExist){
+    throw new ApiError(409,'User with username and email are  already exists');
+   }
+   const avtarLocalPath  = req?.files?.avtar[0]?.path;
+   const coverLocalPath = req?.files[1]?.coverImage[1]?.path;
+    const avtar = await uploadFileOnCloudinary(avtarLocalPath);
+    const coverImage = await uploadFileOnCloudinary(coverLocalPath);
+   if(!avtar){
+    throw new ApiError(500,'Internal Server Error');
+   }
+
+ const user = await User.create({
+    fullName,
+    email,
+    password,
+    avtar: avtar.url,
+    coverImage: coverImage?.url || "",
+    username:username.toLowerCase()
+   })
+   const createdUser = await User.findById(user._id)?.select("-password -refreshtoken");
+   console.log({user:user,createdUser:createdUser});
+   if(!createdUser){
+    throw new ApiError(500,'Something went wrong while registering the user')
+   }
+   
+    return  res.status(201).json(new apiResponse(200,createdUser,"User created successfully"));
 })
 
 

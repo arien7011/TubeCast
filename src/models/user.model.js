@@ -1,6 +1,7 @@
-import mongoose , {schema} from mongoose;//-
-import bcrypt from bcrypt
-import jwt from jwt
+import mongoose, {Schema} from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
 /**
  * Defines the Mongoose schema for a User and includes methods for password hashing and verification.//+
  * //+
@@ -112,4 +113,4 @@ userSchema.methods.generateRefrehToken = function (){
   )
 }
 
-export const user = mongoose.model('User',userSchema);
+export const User = mongoose.model('User',userSchema);

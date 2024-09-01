@@ -22,7 +22,19 @@
  *
  * If the upload fails, the function will log an error message and remove the locally saved temporary file.
  * It will then return null.
+ * 
  */
+import cloudinary from 'cloudinary';
+import fs from 'fs';
+
+// Initialize Cloudinary with your Cloudinary credentials
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 const uploadFileOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
@@ -37,4 +49,4 @@ const uploadFileOnCloudinary = async (localFilePath) => {
     }
 };
 
-export default uploadFileOnCloudinary;
+export {uploadFileOnCloudinary}
