@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
         type:String,
         required:[true,"Password is required"]
      },
-     avtar : {
+     avatar : {
       type:String,  //cloudinary url
       required:true 
      },
@@ -75,9 +75,11 @@ const userSchema = new mongoose.Schema(
  * //+
  * @param {import('mongoose').HookNextFunction} next - The next function in the middleware chain.//+
  *///+
-userSchema.pre("save", async function (next){
-   if(!this.isModifed("password")) { return next()}
-   this.password = await bcrypt.hash(this.password,10)//+
+ userSchema.pre("save", async function (next) {
+   if(!this.isModified("password")) return next();
+
+   this.password = await bcrypt.hash(this.password, 10)
+   next()
 })
 
 /**

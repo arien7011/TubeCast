@@ -20,7 +20,7 @@ import { app } from "./app.js";
  * @param {string} options.path - Path to the .env file.
  */
 dotenv.config({
-  path: "./env",
+  path: "./.env",
 });
 
 /**

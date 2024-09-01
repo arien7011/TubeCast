@@ -1,7 +1,7 @@
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import {User} from '../models/user.model.js';
-import {uploadFileOnCloudinary} from '../utils/cloudinary.js';
+import {uploadOnCloudinary} from '../utils/cloudinary.js';
 import {apiResponse} from '../utils/apiResponse.js';
 /**
  * Registers a new user.
@@ -19,17 +19,15 @@ import {apiResponse} from '../utils/apiResponse.js';
  */
 const registerUser = asyncHandler( async (req,res)=>{
     // TODO: Implement the registration logic here.
- //  get data from request body
- //get user details from frontend
- // check if all required information is available in request or not ( i.e check if  required user details are not empty).
- //check if user is already registered (check for username and email for verification)
- // check for images and avtar 
- //upload them on cloudinary, avtar
- // create user - create entry in db as object (mongo db stores data as object (in key value pair))
- //  return all data as response object
- // remove password and refreshtoken 
- // check if user registered(if user created successfully)
- //return response
+   // get user details from frontend
+    // validation - not empty
+    // check if user already exists: username, email
+    // check for images, check for avatar
+    // upload them to cloudinary, avatar
+    // create user object - create entry in db
+    // remove password and refresh token field from response
+    // check for user creation
+    // return res
 
   const userData = req.body;
   const {username,fullName,email,password} = userData;
@@ -39,25 +37,37 @@ const registerUser = asyncHandler( async (req,res)=>{
      {
        throw new ApiError(400,'All fields are required');
      }
-   const isUserExist = users.findOne({
+   const isUserExist = await User.findOne({
     $or:[{username},{email}]
   });
    if(isUserExist){
     throw new ApiError(409,'User with username and email are  already exists');
    }
-   const avtarLocalPath  = req?.files?.avtar[0]?.path;
-   const coverLocalPath = req?.files[1]?.coverImage[1]?.path;
-    const avtar = await uploadFileOnCloudinary(avtarLocalPath);
-    const coverImage = await uploadFileOnCloudinary(coverLocalPath);
-   if(!avtar){
-    throw new ApiError(500,'Internal Server Error');
+   const avatarLocalPath = req.files?.avatar[0]?.path;
+   //const coverImageLocalPath = req.files?.coverImage[0]?.path;
+   
+   let coverImageLocalPath ;
+   if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length >0){
+    coverImageLocalPath = req.files.coverImage[0].path;
+   }
+
+   if (!avatarLocalPath) {
+       throw new ApiError(400, "Avatar file is required")
+   }
+
+   const avatar = await uploadOnCloudinary(avatarLocalPath)
+   const coverImage = await uploadOnCloudinary(coverImageLocalPath)  //even if cloudinary doesn't get any image in coverImagePath it just return empty string rather than
+   //throwing an error/exception.
+
+   if (!avatar) {
+       throw new ApiError(400, "Avatar file is required")
    }
 
  const user = await User.create({
     fullName,
     email,
     password,
-    avtar: avtar.url,
+    avatar: avatar.url,
     coverImage: coverImage?.url || "",
     username:username.toLowerCase()
    })
