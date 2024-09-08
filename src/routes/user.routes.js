@@ -9,7 +9,7 @@
 import router from "express";
 import {registerUser , loginUser, logoutUser} from "../controllers/user.controller.js";
 import  {upload} from "../middlewares/multer.middleware.js";
-import { verifyjwtToken } from "../middlewares/auth.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 /**
  * Initializes the Express router and sets up the route for user registration.
@@ -37,7 +37,7 @@ userRouter.route("/register").post(
     userRouter.route("/login").post(loginUser);
 
     //secured routes
-    userRouter.route("/logout").post(verifyjwtToken,logoutUser); //This verifyjwtToken is a middleware which is used to authenticate the request that means whoever send this request is an authenticated user
+    userRouter.route("/logout").post(verifyJWT,logoutUser); //This verifyjwtToken is a middleware which is used to authenticate the request that means whoever send this request is an authenticated user
     // or not to access our protected resources.
 
 export default userRouter;

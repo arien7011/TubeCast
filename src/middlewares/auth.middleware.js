@@ -1,5 +1,5 @@
 import { User } from '../models/user.model.js';
-import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken"
 import {asyncHandler} from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 
@@ -18,17 +18,18 @@ import ApiError from '../utils/ApiError.js';
  * @returns {void} - This function does not return a value. It modifies the req object and calls the next middleware function.
  */
 
-const verifyjwtToken = asyncHandler(async(req,_,next)=>{
+const verifyJWT = asyncHandler(async(req,_,next)=>{
     //here we have user '_' symbol after req because we have not used 'res' obj anywhere in the function therefore we can use this '_' instead of using 'res'
     //to avoid any warnings or unnecessary code .
     try{
         const accessToken = req.cookies?.accessToken|| req.header("Authorization")?.replace("Bearer ","");
+        // console.log(accessToken);
         if(!accessToken){
             throw new ApiError(401,"Unauthorized Request")
         }
         const decodedToken = jwt.verify(accessToken , process.env.ACCESS_TOKEN_SECRET);
 
-        const user = await User.findById(decodedToken._id).select(" -password -refreshToken")
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
 
         if(!user){
             throw new ApiError(401,"Invalid access token");
@@ -42,4 +43,4 @@ const verifyjwtToken = asyncHandler(async(req,_,next)=>{
 
 })
 
-export {verifyjwtToken}
+export { verifyJWT }

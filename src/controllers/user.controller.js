@@ -21,9 +21,11 @@ import { apiResponse } from "../utils/apiResponse.js";
   const generateAccessAndRefreshToken = async(userId)=>{
     try{
       const user = await User.findById(userId);
-      const refreshToken =  user.generateRefreshToken();
-      const accessToken = user.generateAccessToken();
+     
+      const refreshToken = user.generateRefrehToken();
+      const accessToken =  user.generateAccessToken();
        user.refreshToken = refreshToken;
+     
       await user.save({validateBeforeSave:false}); //here we are saving only new refresh token in the user but when you save something in the user ,user modal kicks in and 
        //we defined that user should be saved with password as required so that is why  we user do not validate before saving in this case.
        return {accessToken,refreshToken};
@@ -97,7 +99,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const createdUser = await User.findById(user._id)?.select(
     "-password -refreshtoken"
   );
-  console.log({ user: user, createdUser: createdUser });
+  // console.log({ user: user, createdUser: createdUser });
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
@@ -117,7 +119,8 @@ const loginUser = asyncHandler(async (req, res) => {
   // create refresh token and access token
   // remove password and refresh token field from response
   // return res
-  const {username,password,email} = req.body;
+  const {username,password,email} = req?.body;
+  // console.log(req.body);
   if(!username && !email){
     throw new ApiError(400,"username or email is required")
   }
@@ -127,22 +130,25 @@ const loginUser = asyncHandler(async (req, res) => {
    // throw new ApiError(400,"username or email is required")
   //}
 
-  const isUserExist = await User.findOne({$or:[{username},{email}]})
+  const user = await User.findOne({$or:[{username},{email}]})
   
-  if(!isUserExist){
+  if(!user){
   throw new ApiError(404,"User does not exist");
 }
 
- const isPasswordCorrect = await user.isPasswordCorrect(password);
- if(!isPasswordCorrect){
+// console.log({user:user});
+
+ const isPasswordValid = await user.isPasswordCorrect(password);
+ if(!isPasswordValid){
     throw new ApiError(401,"Please enter correct password");
  }
 
-  const {refreshToken , accessToken} =  generateAccessAndRefreshToken(isUserExist._id)
+  const {refreshToken , accessToken} = await generateAccessAndRefreshToken(user._id);
+  
   const loginUser = await User.findById(user?._id).select("-password -refreshToken"); //Here we again write query to fetch user from user db model because now we have
   //updated user with new refresh token which is not updated yet in the previous user reference in  line 125. So either we can just update refresh token i nthe 
   //isUserexist or call the updated user from db.
-
+  console.log(accessToken,'tokenss   ',refreshToken)
   const options = {
     httpOnly:true,
     secure:true
@@ -151,24 +157,22 @@ const loginUser = asyncHandler(async (req, res) => {
    status(200).
    cookie("refreshToken",refreshToken,options).cookie("accessToken",accessToken,options)
    .json(new apiResponse(
-    201,
-    {loginUser,refreshToken,accessToken},
-    "User login Successfully"));
+    200,
+    {user:loginUser,refreshToken,accessToken},
+    "User logged In Successfully"));
    
 });
 
 // Logic when user is logged out
 
 const logoutUser = asyncHandler(async(req,res)=>{
-   await User.findByIdAndUpdate(req.user._id,{refreshToken:undefined},{$set:{new:true}});
-   options = {
+   await User.findByIdAndUpdate(req.user._id,{$set:{refreshToken:undefined}},{new:true});
+  const options = {
     httpOnly:true,
     secure:true
    }
 
   return res.status(200).clearCookie("refreshToken",options).clearCookie("accessToken",options).json(new apiResponse(200,{},"User Logged Out"))
-
-
 });
 
 export {registerUser , loginUser ,logoutUser};
