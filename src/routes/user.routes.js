@@ -39,6 +39,7 @@ userRouter.route("/register").post(
     //secured routes
     userRouter.route("/logout").post(verifyJWT,logoutUser); //This verifyjwtToken is a middleware which is used to authenticate the request that means whoever send this request is an authenticated user
     // or not to access our protected resources.
+    userRouter.route("/refresh-token").post(VerifyRefreshToken);
 
 export default userRouter;
 

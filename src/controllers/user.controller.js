@@ -17,7 +17,10 @@ import { apiResponse } from "../utils/apiResponse.js";
  * @param {string} req.body.password - The password of the new user.
  * @returns {void} - This function does not return any value.
  */
-
+ const options = {
+  httpOnly:true,
+  secure:true
+  }
   const generateAccessAndRefreshToken = async(userId)=>{
     try{
       const user = await User.findById(userId);
@@ -165,6 +168,17 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // Logic when user is logged out
 
+/**
+ * Handles the user logout process.
+ *
+ * This function is an asynchronous handler that processes a POST request to log out a user.
+ * It clears the refresh token cookie and the access token cookie from the client's browser.
+ * It also updates the user's refresh token in the database to undefined.
+ *
+ * @param {Object} req - The request object containing the user's logout data.
+ * @param {Object} res - The response object to be sent back to the client.
+ * @returns {Object} - The response object with a status code of 200 and a JSON object containing a success message.
+ */
 const logoutUser = asyncHandler(async(req,res)=>{
    await User.findByIdAndUpdate(req.user._id,{$set:{refreshToken:undefined}},{new:true});
   const options = {
@@ -175,4 +189,45 @@ const logoutUser = asyncHandler(async(req,res)=>{
   return res.status(200).clearCookie("refreshToken",options).clearCookie("accessToken",options).json(new apiResponse(200,{},"User Logged Out"))
 });
 
-export {registerUser , loginUser ,logoutUser};
+/**
+ * Verifies the refresh token and generates a new access token.
+ *
+ * This function is an asynchronous handler that processes a POST request to verify a refresh token.
+ * It verifies the incoming refresh token, retrieves the user from the database, and checks if the refresh token is valid.
+ * If the refresh token is valid, it generates a new access token and refresh token, and sends them back to the client.
+ *
+ * @param {Object} req - The request object containing the refresh token.
+ * @param {Object} res - The response object to be sent back to the client.
+ * @param {string} req.cookies.refreshToken - The refresh token sent from the client.
+ * @param {string} req.body.refreshToken - The refresh token sent from the client.
+ * @returns {Object} - The response object with a status code of 200 and a JSON object containing the new access token and refresh token.
+ * @throws {ApiError} - If the refresh token is invalid or expired, it throws an ApiError with a status code of 401.
+ */
+const VerifyRefreshToken = asyncHandler(async(req,res)=>{
+  try{
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken ;
+    if(!incomingRefreshToken) {
+      throw new ApiError(401,"Unauthorized Access");
+    }
+    const decodedRefreshToken = jwt.verify(incomingRefreshToken,process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decodedRefreshToken?._id);
+
+    if(!user){
+     throw new Error(401,"Refresh token is invalid")
+    }
+
+    if(user?.refreshToken !== incomingRefreshToken){
+      throw new Error(401,"Refresh token is expired or used");
+    }
+
+    const {accessToken ,refreshToken} = await generateAccessAndRefreshToken(user?._id);
+      return res.status(200).
+      cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(200,{refreshToken ,accessToken},"User Logged In Successfully")
+
+  } catch(error){
+    throw new ApiError(401,error.message || "Invalid Refresh Token")
+  }
+})
+
+
+export {registerUser , loginUser ,logoutUser,VerifyRefreshToken};
