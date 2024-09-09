@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { apiResponse } from "../utils/apiResponse.js";
+import req from "express/lib/request.js";
 /**
  * Registers a new user.
  *
@@ -229,5 +230,35 @@ const VerifyRefreshToken = asyncHandler(async(req,res)=>{
   }
 })
 
+const changeUserPassword = asyncHandler(async(req,res)=>{
+    const user = req.user;
+    const {oldPassword , newPassword} = req.body;
+    const isPasswordCorrect = user.isPasswordCorrect(oldPassword);
+    if(!(isPasswordCorrect)){
+      throw new ApiError(401,"Invalid Old Password")
+    }
+    user.password = newPassword;
+    await user.save({validateBeforeSave:false});
+    return res.status(200).json(200,{},"Password Updated Successfully")
+})
 
-export {registerUser , loginUser ,logoutUser,VerifyRefreshToken};
+const getCurrentUser = asyncHandler(async(req,res)=>{
+  return res
+  .status(200)
+  .json(new ApiResponse(
+      200,
+      req.user,
+      "User fetched successfully"
+  ))
+})
+
+const updateAccountDetails = asyncHandler(async(req,res)=>{
+  const {email,fullName} = req.body;
+   if(!(email && fullName)){
+    throw new ApiError(400,"Email and full Name must be provided");
+   }
+    const user = await User.findByIdAndUpdate(req?.user?._id ,{set:{email,fullName}},{new:true}).select(" -password");
+    res.status(200).json(new apiResponse(200,{user},"User Updated Successfully"));
+})
+
+export {registerUser , loginUser ,logoutUser,VerifyRefreshToken,changeUserPassword,getCurrentUser,updateAccountDetails};

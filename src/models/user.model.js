@@ -89,7 +89,7 @@ const userSchema = new mongoose.Schema(
  * @returns {Promise<boolean>} - A promise that resolves to true if the password is correct, otherwise false.
  */
 userSchema.methods.isPasswordCorrect = async function (password){
-   return await bcrypt.compare(password,this.password,)
+   return await bcrypt.compare(password,this.password)
 }
 
 userSchema.methods.generateAccessToken = function (){
