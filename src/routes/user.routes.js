@@ -40,6 +40,13 @@ userRouter.route("/register").post(
     userRouter.route("/logout").post(verifyJWT,logoutUser); //This verifyjwtToken is a middleware which is used to authenticate the request that means whoever send this request is an authenticated user
     // or not to access our protected resources.
     userRouter.route("/refresh-token").post(VerifyRefreshToken);
+    userRouter.route('/change-password').post(verifyjwtToken,changeUserPassword);
+    userRouter.route('/current-user').post(verifyjwtToken,getCurrentUser);
+    userRouter.route('/update-account').patch(verifyjwtToken,updateAccountDetails);
+    userRouter.route('/avatar').patch(verifyjwtToken,upload.single('avatar'),uploadAvatarImage);
+    userRouter.route('/cover-image').patch(verifyjwtToken, upload.single('coverImage'), uploadCoverImage);
+    userRouter.route('/c/:userName').get(verifyjwtToken,getUserChannelInfo);
+    userRouter.route('/user-watch-history').get(verifyjwtToken, getUserWatchHistory);
 
 export default userRouter;
 
