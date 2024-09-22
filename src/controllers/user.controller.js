@@ -204,7 +204,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
  * @returns {Object} - The response object with a status code of 200 and a JSON object containing the new access token and refresh token.
  * @throws {ApiError} - If the refresh token is invalid or expired, it throws an ApiError with a status code of 401.
  */
-const VerifyRefreshToken = asyncHandler(async(req,res)=>{
+const refreshAccessToken = asyncHandler(async(req,res)=>{
   try{
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken ;
     if(!incomingRefreshToken) {
@@ -230,7 +230,7 @@ const VerifyRefreshToken = asyncHandler(async(req,res)=>{
   }
 })
 
-const changeUserPassword = asyncHandler(async(req,res)=>{
+const changeCurrentPassword = asyncHandler(async(req,res)=>{
     const user = req.user;
     const {oldPassword , newPassword} = req.body;
     const isPasswordCorrect = user.isPasswordCorrect(oldPassword);
@@ -261,7 +261,7 @@ const updateAccountDetails = asyncHandler(async(req,res)=>{
     res.status(200).json(new apiResponse(200,{user},"User Updated Successfully"));
 })
 
-const uploadAvatarImage = asyncHandler(async(req,res)=>{
+const updateUserAvatar = asyncHandler(async(req,res)=>{
   try{
     const avatarLocalPath = req.file?.path;
     if(!avatarLocalPath){
@@ -280,7 +280,7 @@ const uploadAvatarImage = asyncHandler(async(req,res)=>{
  
 })
 
-const uploadCoverImage = asyncHandler(async(req,res)=>{
+const updateUserCoverImage = asyncHandler(async(req,res)=>{
   try{
     const coverImageLocalPath =  req.file?.path;
     if(!coverImageLocalPath){
@@ -298,7 +298,7 @@ const uploadCoverImage = asyncHandler(async(req,res)=>{
  
 })
 
-const getUserChannelInfo = asyncHandler(async (req,res)=>{
+const getUserChannelProfile = asyncHandler(async (req,res)=>{
 
   const {userName} = req.params;
   if(!userName){
@@ -357,11 +357,11 @@ const getUserChannelInfo = asyncHandler(async (req,res)=>{
     throw new ApiError(400,"Channel Not Found");
    }
 
-   return res.status(200).json(200,{channel:channel[0],"Channel Information Fetched Successfully"})
+   return res.status(200).json(200,{channel:channel[0],message:"Channel Information Fetched Successfully"})
 })
 
 
-const getUserWatchHistory = asyncHandler(async(req,res)=>{
+const getWatchHistory = asyncHandler(async(req,res)=>{
   const user = User.aggregate([
  {
   $match: {
@@ -410,4 +410,4 @@ const getUserWatchHistory = asyncHandler(async(req,res)=>{
 })
 
 
-export {registerUser , loginUser ,logoutUser,VerifyRefreshToken,changeUserPassword,getCurrentUser,updateAccountDetails,uploadAvatarImage,uploadCoverImage,getUserChannelInfo,getUserWatchHistory};
+export {registerUser , loginUser ,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,updateUserAvatar,updateUserCoverImage,getUserChannelProfile,getWatchHistory};

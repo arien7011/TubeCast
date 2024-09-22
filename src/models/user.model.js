@@ -44,7 +44,6 @@ const userSchema = new mongoose.Schema(
         required:true,
         trim:true,
         lowercase:true,
-        index:true
      },
      password: {
         type:String,
@@ -75,6 +74,12 @@ const userSchema = new mongoose.Schema(
  * //+
  * @param {import('mongoose').HookNextFunction} next - The next function in the middleware chain.//+
  *///+
+ /**
+  * we have used pre hook here which is a hook offered by model schema , it is used here to check  whether the password in modal schema is 
+  * modified or not.if it is modified then hash the user entered password and we pass this password in quotes because that' the type we define 
+  * for password and obviously user entered password in text form .
+  * 
+  */
  userSchema.pre("save", async function (next) {
    if(!this.isModified("password")) return next();
 
@@ -87,6 +92,12 @@ const userSchema = new mongoose.Schema(
  * 
  * @param {string} password - The password to compare.//+
  * @returns {Promise<boolean>} - A promise that resolves to true if the password is correct, otherwise false.
+ */
+/**
+we have defined isPasswordCorrect custom method which we added into a schema object i.e methods in which we can inject our custom method
+these methods has reference of schema object or all data stored in this schema modal. Here we are comparing the password sent by user and 
+the password we have saved into the modal for that we are using decrpt which decrypt the save password again in text form so we can 
+compare and recognize whether password is changed or not .
  */
 userSchema.methods.isPasswordCorrect = async function (password){
    return await bcrypt.compare(password,this.password)
